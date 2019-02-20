@@ -13,6 +13,7 @@
 * Runcloud
 * Moss
 * Custom configs
+
 Плюс в последнее время мы почти на всех серверах гоняем Runcloud, и Ubuntu нам подходит больше всех.
 
 ## Server stack:
@@ -48,3 +49,80 @@
 
 *сервер готов и можно приступать к созданию проекта*
 ![server dashboard](https://user-images.githubusercontent.com/12497991/53122973-a9001c00-3560-11e9-9286-53406ed6f48c.png)
+
+## Создание проекта:
+Я думаю большенство работают через панель, но я люблю автоматизировать процесс, мы не так давно создали shell wrapper для API Runcloud и теперь все это возможно:
+1. Создаю пользователя на сервере под проект для изоляции - `rcdk sysusers create tmw`
+2. Запускаю наш bundler, который запросит нужные данные о проекте, как имя для базы, юзера для проекта, стэк проекта, ssl etc. - `rcdk bundler`
+
+*проект готов вместе с базой и нужными настройками*
+![app list](https://user-images.githubusercontent.com/12497991/53124997-83c1dc80-3565-11e9-8b84-f34269692726.png)
+
+Теперь я подключу свой репозиторий к GIT проекта на Runcloud, тут к сожелению надо руками будет создать ключ через веб панель для моего пользователя, и добавить его в репозиторий.
+
+*генерация ключа для GitHub repo*
+![deployment key](https://user-images.githubusercontent.com/12497991/53125901-ae149980-3567-11e9-84c2-64a677154695.png)
+
+*подключение репозитория к проекту*
+![runcloud app to git](https://user-images.githubusercontent.com/12497991/53126044-fa5fd980-3567-11e9-901b-8cd7d37ed42f.png)
+
+На этом этапе код уже был переброшен к нам на сервер, и пришла пора собирать сам проект.
+
+## Настройка Atomic Deploy:
+Atomic deployment позволят нам собирать проекты с мульти задачность, логами, различными конфигами и синлинками. 
+1. Перейду в менюшке в Atomic deploy и создам новый процесс:
+
+*создаем atomic deploy*
+![create atomic deployment](https://user-images.githubusercontent.com/12497991/53126641-495a3e80-3569-11e9-9ff1-73f16d379013.png)
+![atomic config](https://user-images.githubusercontent.com/12497991/53126983-0f3d6c80-356a-11e9-9700-972f3029494b.png)
+
+2. Далее сам процесс конфига проекта через .env и custom-config.yml, тут будут указаны какие проекты ставить, данные базы и много другое.
+
+*секция настройки конфига*
+![atomic config](https://user-images.githubusercontent.com/12497991/53127238-aacedd00-356a-11e9-9348-82ec2099bb08.png)
+
+3. Сам процесс сборки проекта будет настроен в deployment script, там тоже мы поколдовали, и надо лишь запусть `bash wpi.sh`
+
+*в зависимости от сложности проекта создаются разные конфиги сборки*
+![atomic deployment scripts](https://user-images.githubusercontent.com/12497991/53128025-7f4cf200-356c-11e9-94d3-c09a7a5ff2f5.png)
+
+Процесс был запущен и сервер спулил последнюю версию кода и собрал весь проект, настроил WordPress по заданным сетапам в конфиге, и теперь можно уже логинится в админку.
+
+*процесс сборки с логами*
+![atomic config](https://user-images.githubusercontent.com/12497991/53128025-7f4cf200-356c-11e9-94d3-c09a7a5ff2f5.png)
+
+## Процесс настройки WordPress и плагинов:
+1. Активация всего добра, что было установлено
+
+*так выглядит конфиг проекта*
+![custom yml config](https://user-images.githubusercontent.com/12497991/53128501-a1933f80-356d-11e9-84fb-a0827c25cad9.png)
+
+2. Далее произведем нужные настройки во всех плагина, кеш, cloudflare, сео, вуу, закинем демо данные и в принципе сайт готов для тестов.
+
+## Похайпим скоростью:
+Я прекрасно понимаю, что сервисы по проверкам скорости загрузки сайта это то еще дело, но клиенты любят видеть цифры, а еще больше требовать. Поэтому на завершение мы так же пробежимся по списку популярных:
+* https://tools.pingdom.com
+* https://gtmetrix.com
+* https://www.webpagetest.org
+* https://developers.google.com/speed/pagespeed/insights/
+
+Важно заметить, что были выполнены базовые настройки по оптимизации, и всегда есть над чем поработать и что доработать, но мне для обзора хватило с головой!
+
+*tools.pingdom.com*
+![tools.pingdom.com - germany](https://user-images.githubusercontent.com/12497991/53129247-c983a280-356f-11e9-8201-ec3e54ef38b9.png)
+
+*developers.google.com/speed/pagespeed/insights*
+![google page speed insights](https://user-images.githubusercontent.com/12497991/53129536-7827e300-3570-11e9-972c-002521126798.png)
+
+*gtmetrix.com*
+![gtmetrix.com - canada](https://user-images.githubusercontent.com/12497991/53129719-fe442980-3570-11e9-920b-eb933f69c06a.png)
+
+*www.webpagetest.org*
+![www.webpagetest.org - pragua](https://user-images.githubusercontent.com/12497991/53130098-0486d580-3572-11e9-9331-5604143237ac.png)
+
+## Итог:
+В общем первое знакомство с VDS timeweb прошло более, чем приятно. Все очень удобно, быстро, просто.
+На сборку было потрачено не больше часа вместе с базовой настройкой оптимизации, стресс тесты не производил, так как это требует еще времени, которого нет. 
+Хочу пожелать ребятам с timeweb продолжать радовать сообщество WordPress новыми продуктами и сервисами, хотелось бы больше автоматизации, API, интересных сборок под WordPress и конечно удачи! :)
+
+## Hello World!
